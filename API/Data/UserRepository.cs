@@ -1,5 +1,6 @@
 using API.DTOs;
 using API.Entities;
+using API.Helpers;
 using API.Interfaces;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
@@ -15,7 +16,7 @@ namespace API.Data
         {
             _mapper = mapper;
             _context = context;
-            
+
         }
 
         public async Task<MemberDto> GetMemberAsync(string username)
@@ -26,11 +27,31 @@ namespace API.Data
                 .SingleOrDefaultAsync();
         }
 
-        public async Task<IEnumerable<MemberDto>> GetMembersAsync()
+        public async Task<PagedList<MemberDto>> GetMembersAsync(UserParams userParams)
         {
-            return await _context.Users
-                .ProjectTo<MemberDto>(_mapper.ConfigurationProvider)
-                .ToListAsync();
+            var query = _context.Users.AsQueryable();
+
+            // build our query according to info in UserParams
+            query = query.Where(u => u.UserName != userParams.CurrentUsername); // exclude current user
+            query = query.Where(u => u.Gender == userParams.Gender);
+
+            var minDob = DateOnly.FromDateTime(DateTime.Today.AddYears(-userParams.MaxAge - 1)); // oldest
+            var maxDob = DateOnly.FromDateTime(DateTime.Today.AddYears(-userParams.MinAge)); // youngest
+
+            query = query.Where(u => u.DateOfBirth >= minDob && u.DateOfBirth <= maxDob);
+
+            // order results
+            query = userParams.OrderBy switch
+            {
+                "created" => query.OrderByDescending(u => u.Created),
+                _ => query.OrderByDescending(u => u.LastActive) // default
+            };
+
+            return await PagedList<MemberDto>.CreateAsync(
+                query.AsNoTracking().ProjectTo<MemberDto>(_mapper.ConfigurationProvider),
+                userParams.pageNumber,
+                userParams.PageSize
+            );
         }
 
         public async Task<AppUser> GetUserByIdAsync(int id)
