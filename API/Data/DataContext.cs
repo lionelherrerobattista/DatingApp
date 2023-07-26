@@ -15,6 +15,8 @@ namespace API.Data
 
         public DbSet<UserLike> Likes { get; set; }
         public DbSet<Message> Messages { get; set; }
+        public DbSet<Group> Groups { get; set; }
+        public DbSet<Connection> Connections { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -33,7 +35,7 @@ namespace API.Data
                 .IsRequired();
 
             builder.Entity<UserLike>() //target entity
-                .HasKey(k => new {k.SourceUserId, k.TargetUserId}); // specify primary key
+                .HasKey(k => new { k.SourceUserId, k.TargetUserId }); // specify primary key
 
             // source user can like many other users
             builder.Entity<UserLike>()
@@ -53,7 +55,7 @@ namespace API.Data
                 .HasOne(u => u.Recipient)
                 .WithMany(m => m.MessagesReceived)
                 .OnDelete(DeleteBehavior.Restrict); // dont' delete the message if the user has delete the profile
-            
+
             builder.Entity<Message>()
                 .HasOne(u => u.Sender)
                 .WithMany(m => m.MessagesSent)
