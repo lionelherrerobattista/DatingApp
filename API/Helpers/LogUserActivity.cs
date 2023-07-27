@@ -15,11 +15,11 @@ namespace API.Helpers
 
             var userId = resultContext.HttpContext.User.GetUserId(); // extension method
 
-            var repo = resultContext.HttpContext.RequestServices.GetRequiredService<IUserRepository>(); // get repository
-            var user = await repo.GetUserByIdAsync(userId);
+            var uow = resultContext.HttpContext.RequestServices.GetRequiredService<IUnitOfWork>();
+            var user = await uow.UserRepository.GetUserByIdAsync(userId);
             user.LastActive = DateTime.UtcNow;
             // save changes
-            await repo.SaveAllAsync();
+            await uow.Complete();
         }
     }
 }
