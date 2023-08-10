@@ -1,3 +1,7 @@
+.img-not-approved {
+    opacity: 0.2;
+}
+
 .nv-file-over {
     border: dotted 3px red;
 }

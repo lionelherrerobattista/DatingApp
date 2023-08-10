@@ -44,7 +44,7 @@ namespace API.Controllers
         [HttpGet("{username}")]
         public async Task<ActionResult<MemberDto>> GetUser(string username)
         {
-            return await _uow.UserRepository.GetMemberAsync(username);
+            return await _uow.UserRepository.GetMemberAsync(username, User.GetUsername());
         }
 
         [HttpPut]
@@ -79,7 +79,7 @@ namespace API.Controllers
             };
 
             // check if first photo
-            if (user.Photos.Count == 0) photo.IsMain = true;
+            // if (user.Photos.Count == 0) photo.IsMain = true;
 
             user.Photos.Add(photo);
 
@@ -122,7 +122,8 @@ namespace API.Controllers
         {
             var user = await _uow.UserRepository.GetUserByUsernameAsync(User.GetUsername());
 
-            var photo = user.Photos.FirstOrDefault(x => x.Id == photoId);
+            // var photo = user.Photos.FirstOrDefault(x => x.Id == photoId);
+            var photo = await _uow.PhotoRepository.GetPhotoById(photoId);
 
             if (photo == null) return NotFound();
 
